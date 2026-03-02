@@ -11,6 +11,12 @@ st.set_page_config(
 )
 
 # --------------------------------------------------
+# Session State Initialization (CRITICAL FIX)
+# --------------------------------------------------
+if "code" not in st.session_state:
+    st.session_state.code = ""
+
+# --------------------------------------------------
 # Knowledge Base
 # --------------------------------------------------
 CRYPTO_PATTERNS = {
@@ -101,17 +107,21 @@ code_input = st.text_area(
     placeholder="Paste your source code here..."
 )
 
-code = ""
+# Store code persistently
 if uploaded_file:
-    code = uploaded_file.read().decode("utf-8", errors="ignore")
+    st.session_state.code = uploaded_file.read().decode("utf-8", errors="ignore")
 elif code_input.strip():
-    code = code_input
+    st.session_state.code = code_input
+
+if st.session_state.code:
+    st.success("Code loaded successfully. Ready for analysis.")
 
 # --------------------------------------------------
 # Run Analysis
 # --------------------------------------------------
-if st.button("🔍 Analyze Code") and code:
-    detected_algos = scan_code(code)
+if st.button("🔍 Analyze Code") and st.session_state.code:
+
+    detected_algos = scan_code(st.session_state.code)
 
     # --------------------------------------------------
     # Step 2: Detection Results
@@ -182,9 +192,11 @@ if st.button("🔍 Analyze Code") and code:
                 f"Identify {algo} usage and migrate to {PQC_RECOMMENDATION[algo]}"
             )
 
-    roadmap.append("Deploy hybrid cryptography (classical + PQC)")
-    roadmap.append("Perform security and compatibility testing")
-    roadmap.append("Gradually phase out classical cryptography")
+    roadmap.extend([
+        "Deploy hybrid cryptography (classical + PQC)",
+        "Perform security and compatibility testing",
+        "Gradually phase out classical cryptography"
+    ])
 
     for step in roadmap:
         st.write(f"✔️ {step}")
